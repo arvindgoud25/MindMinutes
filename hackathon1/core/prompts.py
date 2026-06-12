@@ -57,5 +57,13 @@ PROMPTS = {
 }
 
 
-def get_system_prompt(analysis_type: str) -> str:
-    return PROMPTS.get(analysis_type, PROMPTS["Full Analysis"])["system"]
+def get_system_prompt(analysis_type: str, output_language: str = "English") -> str:
+    prompt = PROMPTS.get(
+        analysis_type,
+        PROMPTS["Full Analysis"]
+    )["system"]
+
+    if output_language != "English":
+        prompt += f"\n\nIMPORTANT: Provide the entire response in {output_language}."
+
+    return prompt

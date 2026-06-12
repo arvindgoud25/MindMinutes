@@ -2,6 +2,7 @@ import streamlit as st
 
 from core.ai_client import AIClient, get_ollama_models
 from core.prompts import get_system_prompt
+from core.translations import LANGUAGES
 from core.utils import read_file, init_session_state
 
 st.set_page_config(
@@ -16,11 +17,26 @@ init_session_state()
 # ─── Sidebar ────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.title("⚙️ Configuration")
+    if "output_language" not in st.session_state:
+        st.session_state.output_language = "English"
+
+    language = st.selectbox(
+        "Language",
+        ["English", "Telugu", "Hindi"]
+    )
+
+    if st.session_state.output_language in ["English", "Telugu", "Hindi"]:
+        if st.session_state.get("last_language") != language:
+            st.session_state.output_language = language
+            st.session_state.last_language = language
+
+    t = LANGUAGES[language]
+
+    st.title(f"⚙️ {t['configuration']}")
     st.markdown("---")
 
     provider_option = st.selectbox(
-        "AI Provider",
+        t["ai_provider"],
         ["Local (Ollama)", "OpenAI (BYOK)", "Anthropic (BYOK)"],
     )
 
@@ -97,7 +113,7 @@ with st.sidebar:
 
 # ─── Main Content ───────────────────────────────────────────────────────────
 
-st.title("📝 MindMinutes")
+st.title(f"📝 {t['title']}")
 st.markdown("Paste a meeting transcript or upload a file to get AI-powered analysis.")
 
 input_tab, upload_tab = st.tabs(["📄 Paste Transcript", "📁 Upload File"])
@@ -125,11 +141,25 @@ with upload_tab:
             st.text(transcript[:3000] + ("..." if len(transcript) > 3000 else ""))
 
 analysis_type = st.selectbox(
-    "Analysis Type",
+    t["analysis_type"],
     ["Full Analysis", "Summary", "Action Items", "Key Decisions"],
 )
 
-analyze_clicked = st.button("🚀 Analyze", type="primary", use_container_width=True)
+output_language = st.selectbox(
+    t["output_language"],
+    ["English", "Telugu", "Hindi"],
+    index=["English", "Telugu", "Hindi"].index(
+        st.session_state.output_language
+    )
+)
+
+st.session_state.output_language = output_language
+
+analyze_clicked = st.button(
+    f"🚀 {t['analyze']}",
+    type="primary",
+    use_container_width=True
+)
 
 if analyze_clicked:
     if not transcript.strip():
@@ -150,7 +180,10 @@ if analyze_clicked:
     ):
         with st.spinner("🤖 Analyzing your transcript..."):
             try:
-                system_prompt = get_system_prompt(analysis_type)
+                system_prompt = get_system_prompt(
+                    analysis_type,
+                    output_language
+                )
                 result = client.chat(system_prompt, transcript)
 
                 st.session_state.current_result = result
@@ -175,7 +208,7 @@ if st.session_state.current_result:
     st.markdown("---")
     col1, col2, col3 = st.columns([2, 1, 1])
     with col1:
-        st.subheader("📊 Analysis Results")
+        st.subheader(f"📊 {t['analysis_results']}")
         st.caption(
             f"**Provider:** {st.session_state.history[-1]['provider'] if st.session_state.history else provider_option}  ·  "
             f"**Model:** {st.session_state.history[-1]['model'] if st.session_state.history else model}  ·  "
@@ -183,22 +216,16 @@ if st.session_state.current_result:
         )
     with col2:
         st.download_button(
-            "📥 Download MD",
+            f"📥 {t['download_md']}",
             st.session_state.current_result,
             file_name="meeting_analysis.md",
             mime="text/markdown",
             use_container_width=True,
         )
     with col3:
-        if st.button("🔄 New Analysis", use_container_width=True):
+        if st.button(f"🔄 {t['new_analysis']}", use_container_width=True):
             st.session_state.current_result = None
             st.rerun()
 
     st.markdown(st.session_state.current_result)
 
-st.markdown("---")
-st.caption(
-    "Built for Hackathon · "
-    "Supports **Local AI** (Ollama) & **BYOK** (OpenAI / Anthropic) · "
-    "Your API keys stay client-side and are never stored"
-)
