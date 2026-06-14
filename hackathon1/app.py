@@ -15,62 +15,6 @@ st.set_page_config(
 
 init_session_state()
 
-if st.session_state.dark_mode:
-    st.markdown("""
-<style>
-    .stApp { background-color: #0e1117; color: #fafafa; }
-    .stApp header { background-color: #0e1117; }
-    .stSidebar, .stSidebar .st-emotion-cache-1wrcr25, section[data-testid="stSidebar"] {
-        background-color: #1b1f24;
-    }
-    .stTextArea textarea, .stSelectbox div[data-baseweb="select"] > div {
-        background-color: #262730 !important;
-        color: #fafafa !important;
-    }
-    .stTextArea textarea:focus {
-        border-color: #6C63FF !important;
-    }
-    .st-bq, .st-emotion-cache-1v0mbdj, .st-emotion-cache-1y4p8pa {
-        background-color: #1b1f24;
-    }
-    .stMarkdown, .stText, p, li, span, label, .stCaption {
-        color: #fafafa !important;
-    }
-    h1, h2, h3, h4, h5, h6 {
-        color: #ffffff !important;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: #1b1f24;
-    }
-    .stTabs [data-baseweb="tab"] {
-        color: #fafafa;
-    }
-    .stSelectbox label, .stSlider label, .stTextInput label {
-        color: #fafafa !important;
-    }
-    .st-b8 { border-color: #3c3c4a; }
-    .stAlert { background-color: #1b1f24 !important; }
-    .stSpinner > div > div { border-color: #6C63FF !important; }
-    .st-emotion-cache-1y4p8pa { background-color: #1b1f24; }
-    div[data-testid="stExpander"] { background-color: #1b1f24; border: 1px solid #3c3c4a; }
-    div.stDownloadButton button, div.stButton button { background-color: #6C63FF; color: white; }
-    div.stDownloadButton button:hover, div.stButton button:hover { background-color: #5a52e0; }
-    hr { border-color: #3c3c4a; }
-    .stFileUploader { background-color: #262730; border-color: #3c3c4a; }
-    .stFileUploader label { color: #fafafa !important; }
-    pre { background-color: #1b1f24 !important; }
-    code { color: #f0c674 !important; }
-    .st-bb { border-bottom-color: #3c3c4a; }
-    .st-bt { border-top-color: #3c3c4a; }
-    .st-bl { border-left-color: #3c3c4a; }
-    .st-br { border-right-color: #3c3c4a; }
-    .st-cb { color: #fafafa; }
-    .stMetric { background-color: #1b1f24; }
-    .st-bw { background-color: #262730; }
-    div[role="alert"] { background-color: #262730 !important; }
-</style>
-""", unsafe_allow_html=True)
-
 # ─── Sidebar ────────────────────────────────────────────────────────────────
 
 with st.sidebar:
@@ -89,8 +33,7 @@ with st.sidebar:
 
     t = LANGUAGES[language]
 
-    dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.get("dark_mode", False))
-    st.session_state.dark_mode = dark_mode
+    st.toggle("🌙 Dark Mode", key="dark_mode_toggle")
 
     st.title(f"⚙️ {t['configuration']}")
     st.markdown("---")
@@ -159,14 +102,14 @@ with st.sidebar:
         provider_config["api_key"] = api_key
 
     st.markdown("---")
-    with st.expander("Generation Parameters", expanded=False):
+    with st.expander(f"⚡ {t['gen_params']}", expanded=False):
         temperature = st.slider("Temperature", 0.0, 1.0, 0.3, 0.05)
         max_tokens = st.slider("Max Tokens", 256, 4096, 2048, 64)
 
     st.markdown("---")
     if st.session_state.history:
         with st.expander(
-            f"📚 History ({len(st.session_state.history)})", expanded=False
+            f"🕐 {t['history']} ({len(st.session_state.history)})", expanded=False
         ):
             for i, item in enumerate(st.session_state.history):
                 cols = st.columns([3, 1])
@@ -177,44 +120,198 @@ with st.sidebar:
                     st.session_state.current_result = item["result"]
                     st.rerun()
                 st.markdown("---")
-            if st.button("🗑️ Clear History"):
+            if st.button(f"🗑️ {t['clear_history']}"):
                 st.session_state.history = []
                 st.session_state.current_result = None
                 st.rerun()
 
+# ─── Theme CSS ───────────────────────────────────────────────────────────────
+
+if st.session_state.get("dark_mode_toggle", False):
+    st.markdown("""
+<style>
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 8px rgba(108, 99, 255, 0.3); }
+        50% { box-shadow: 0 0 25px rgba(108, 99, 255, 0.6); }
+    }
+
+    .stApp {
+        background: linear-gradient(-45deg, #0a0a1a, #0d1117, #111827, #0a0a1a) !important;
+        background-size: 400% 400% !important;
+        animation: gradientShift 15s ease infinite;
+        color: #e2e8f0;
+    }
+    .stApp::before {
+        content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background:
+            radial-gradient(ellipse at 20% 50%, rgba(108, 99, 255, 0.06) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(0, 201, 255, 0.04) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 80%, rgba(255, 0, 128, 0.03) 0%, transparent 50%);
+        pointer-events: none; z-index: 0;
+    }
+    .stApp header { background: rgba(10, 10, 26, 0.8) !important; backdrop-filter: blur(12px); border-bottom: 1px solid rgba(108, 99, 255, 0.15); }
+    .stSidebar, section[data-testid="stSidebar"] { background: rgba(13, 17, 23, 0.95) !important; border-right: 1px solid rgba(108, 99, 255, 0.12); backdrop-filter: blur(16px); }
+    h1, h2, h3, h4, h5, h6 {
+        background: linear-gradient(135deg, #e2e8f0, #a78bfa, #6C63FF);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        font-weight: 700; letter-spacing: -0.02em;
+    }
+    .stMarkdown, .stText, p, li, span, label, .stCaption { color: #c8d0dc !important; }
+    .stTextArea textarea, .stSelectbox div[data-baseweb="select"] > div {
+        background: rgba(17, 24, 39, 0.8) !important; color: #e2e8f0 !important;
+        backdrop-filter: blur(8px); border: 1px solid rgba(108, 99, 255, 0.2) !important;
+        border-radius: 12px !important; transition: all 0.3s ease;
+    }
+    .stTextArea textarea:focus { border-color: #6C63FF !important; box-shadow: 0 0 20px rgba(108, 99, 255, 0.15); }
+    div.stButton button, div.stDownloadButton button {
+        background: linear-gradient(135deg, #6C63FF, #a78bfa) !important; color: white !important;
+        border: none !important; border-radius: 12px !important; padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important; transition: all 0.3s ease !important;
+        animation: glowPulse 3s ease-in-out infinite;
+    }
+    div.stButton button:hover, div.stDownloadButton button:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 0 35px rgba(108, 99, 255, 0.4) !important;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(12px);
+        border-radius: 14px; padding: 4px; gap: 4px; border: 1px solid rgba(108, 99, 255, 0.1);
+    }
+    .stTabs [data-baseweb="tab"] { color: #94a3b8 !important; border-radius: 10px !important; transition: all 0.3s ease; padding: 0.5rem 1.2rem !important; }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] { background: linear-gradient(135deg, rgba(108, 99, 255, 0.25), rgba(167, 139, 250, 0.15)); color: #e2e8f0 !important; }
+    .stAlert, div[role="alert"] { background: rgba(17, 24, 39, 0.7) !important; backdrop-filter: blur(8px); border: 1px solid rgba(108, 99, 255, 0.15); border-radius: 12px; }
+    div[data-testid="stExpander"] {
+        background: rgba(17, 24, 39, 0.5) !important; backdrop-filter: blur(8px);
+        border: 1px solid rgba(108, 99, 255, 0.12); border-radius: 14px; transition: all 0.3s ease;
+    }
+    .stFileUploader {
+        background: rgba(17, 24, 39, 0.5) !important; backdrop-filter: blur(8px);
+        border: 2px dashed rgba(108, 99, 255, 0.25) !important; border-radius: 16px !important; transition: all 0.3s ease;
+    }
+    .stFileUploader:hover { border-color: rgba(108, 99, 255, 0.5) !important; background: rgba(108, 99, 255, 0.05); }
+    pre { background: rgba(13, 17, 23, 0.8) !important; backdrop-filter: blur(8px); border: 1px solid rgba(108, 99, 255, 0.12); border-radius: 12px; }
+    code { color: #a78bfa !important; }
+    .stSpinner > div > div { border-color: #6C63FF transparent transparent transparent !important; }
+    .stMetric { background: rgba(17, 24, 39, 0.5); backdrop-filter: blur(8px); border: 1px solid rgba(108, 99, 255, 0.12); border-radius: 12px; padding: 1rem; }
+    .stTextInput input { background: rgba(17, 24, 39, 0.8) !important; color: #e2e8f0 !important; border: 1px solid rgba(108, 99, 255, 0.2) !important; border-radius: 12px !important; transition: all 0.3s ease; }
+    hr { border-color: rgba(108, 99, 255, 0.12); }
+    .st-bb, .st-bt, .st-bl, .st-br { border-color: rgba(108, 99, 255, 0.12); }
+</style>
+""", unsafe_allow_html=True)
+else:
+    st.markdown("""
+<style>
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-4px); }
+    }
+
+    .stApp {
+        background: linear-gradient(135deg, #f8f9ff, #f0f2ff, #f8f9ff);
+        background-size: 200% 200%;
+        animation: gradientShift 10s ease infinite;
+    }
+    .stApp::before {
+        content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background:
+            radial-gradient(ellipse at 10% 10%, rgba(108, 99, 255, 0.04) 0%, transparent 50%),
+            radial-gradient(ellipse at 90% 90%, rgba(167, 139, 250, 0.03) 0%, transparent 50%);
+        pointer-events: none; z-index: 0;
+    }
+    .stApp header { background: rgba(255, 255, 255, 0.85) !important; backdrop-filter: blur(12px); border-bottom: 1px solid rgba(108, 99, 255, 0.1); }
+    .stSidebar, section[data-testid="stSidebar"] { background: rgba(255, 255, 255, 0.92) !important; border-right: 1px solid rgba(108, 99, 255, 0.08); backdrop-filter: blur(16px); }
+    h1, h2, h3, h4, h5, h6 {
+        background: linear-gradient(135deg, #1a1a2e, #6C63FF);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        font-weight: 700; letter-spacing: -0.02em;
+    }
+    .stTextArea textarea, .stSelectbox div[data-baseweb="select"] > div {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(108, 99, 255, 0.15) !important;
+        border-radius: 12px !important; transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(108, 99, 255, 0.05);
+    }
+    .stTextArea textarea:focus { border-color: #6C63FF !important; box-shadow: 0 0 20px rgba(108, 99, 255, 0.12); }
+    div.stButton button, div.stDownloadButton button {
+        background: linear-gradient(135deg, #6C63FF, #8b7cf7) !important; color: white !important;
+        border: none !important; border-radius: 12px !important; padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important; transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+    }
+    div.stButton button:hover, div.stDownloadButton button:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 25px rgba(108, 99, 255, 0.35) !important;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px);
+        border-radius: 14px; padding: 4px; gap: 4px; border: 1px solid rgba(108, 99, 255, 0.1);
+        box-shadow: 0 2px 10px rgba(108, 99, 255, 0.05);
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] { background: linear-gradient(135deg, rgba(108, 99, 255, 0.12), rgba(167, 139, 250, 0.08)); color: #6C63FF !important; font-weight: 600; }
+    .stAlert, div[role="alert"] { background: rgba(255, 255, 255, 0.9) !important; backdrop-filter: blur(8px); border: 1px solid rgba(108, 99, 255, 0.12); border-radius: 12px; }
+    .stAlert { border-left: 4px solid #6C63FF !important; }
+    div[data-testid="stExpander"] {
+        background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(8px);
+        border: 1px solid rgba(108, 99, 255, 0.08); border-radius: 14px; transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(108, 99, 255, 0.04);
+    }
+    .stFileUploader {
+        background: rgba(255, 255, 255, 0.6) !important; backdrop-filter: blur(8px);
+        border: 2px dashed rgba(108, 99, 255, 0.2) !important; border-radius: 16px !important; transition: all 0.3s ease;
+    }
+    .stFileUploader:hover { border-color: rgba(108, 99, 255, 0.4) !important; background: rgba(108, 99, 255, 0.03); }
+    pre { background: rgba(255, 255, 255, 0.8) !important; border: 1px solid rgba(108, 99, 255, 0.1); border-radius: 12px; }
+    code { color: #6C63FF !important; }
+    .stSpinner > div > div { border-color: #6C63FF transparent transparent transparent !important; }
+    .stMetric { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(108, 99, 255, 0.08); border-radius: 12px; padding: 1rem; }
+    .stTextInput input { background: rgba(255, 255, 255, 0.9) !important; border: 1px solid rgba(108, 99, 255, 0.15) !important; border-radius: 12px !important; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(108, 99, 255, 0.05); }
+    .stTextInput input:focus { border-color: #6C63FF !important; box-shadow: 0 0 20px rgba(108, 99, 255, 0.12); }
+    hr { border-color: rgba(108, 99, 255, 0.1); }
+</style>
+""", unsafe_allow_html=True)
+
 # ─── Main Content ───────────────────────────────────────────────────────────
 
-st.title(f"📝 {t['title']}")
-st.markdown("Paste a meeting transcript or upload a file to get AI-powered analysis.")
+st.title(f"🧠 {t['title']}")
+st.markdown(t["tagline"])
 
-input_tab, upload_tab = st.tabs(["📄 Paste Transcript", "📁 Upload File"])
+analysis_options = t["analysis_options"]
+ANALYSIS_KEYS = ["Full Analysis", "Summary", "Action Items", "Key Decisions"]
+
+input_tab, upload_tab = st.tabs([f"📋 {t['paste_transcript']}", f"📁 {t['upload_file']}"])
 
 transcript = ""
 with input_tab:
     transcript = st.text_area(
-        "Paste your meeting transcript below:",
+        t["paste_label"],
         height=280,
-        placeholder="Paste the meeting transcript here...",
+        placeholder=t["paste_placeholder"],
     )
 
 with upload_tab:
     uploaded_file = st.file_uploader(
-        "Upload a transcript file",
+        t["upload_label"],
         type=["txt", "md", "docx", "pdf"],
     )
     if uploaded_file is not None:
         with st.spinner("Reading file..."):
             transcript = read_file(uploaded_file)
         st.info(
-            f"Loaded **{uploaded_file.name}** ({len(transcript)} characters)"
+            t["loaded_file"].format(name=uploaded_file.name, chars=len(transcript))
         )
-        with st.expander("Preview", expanded=False):
+        with st.expander(t["preview"], expanded=False):
             st.text(transcript[:3000] + ("..." if len(transcript) > 3000 else ""))
 
-analysis_type = st.selectbox(
+selected_analysis = st.selectbox(
     t["analysis_type"],
-    ["Full Analysis", "Summary", "Action Items", "Key Decisions"],
+    analysis_options,
 )
+analysis_type = ANALYSIS_KEYS[analysis_options.index(selected_analysis)]
 
 output_language = st.selectbox(
     t["output_language"],
@@ -234,9 +331,9 @@ analyze_clicked = st.button(
 
 if analyze_clicked:
     if not transcript.strip():
-        st.error("Please provide a transcript to analyze.")
+        st.error(t["no_transcript"])
     elif provider_option not in ("Local (Ollama)", "Google Gemini") and not provider_config.get("api_key"):
-        st.error(f"Please enter your API key for {provider_option}.")
+        st.error(t["no_api_key"].format(provider=provider_option))
     else:
         client = AIClient(
             provider=provider_option,
@@ -267,12 +364,12 @@ if analyze_clicked:
                     }
                 )
             except Exception as e:
-                st.error(f"Analysis failed: {e}")
+                st.error(t["analysis_failed"].format(error=e))
                 st.info(
-                    "**Tips:**  \n"
-                    "- For Ollama, ensure the server is running (`ollama serve`)  \n"
-                    "- For BYOK, verify your API key is correct  \n"
-                    "- Check that the model name is valid"
+                    f"**{t['tips']}**  \n"
+                    f"- {t['tip_ollama']}  \n"
+                    f"- {t['tip_byok']}  \n"
+                    f"- {t['tip_model']}"
                 )
 
 if st.session_state.current_result:
@@ -281,9 +378,9 @@ if st.session_state.current_result:
     with col1:
         st.subheader(f"📊 {t['analysis_results']}")
         st.caption(
-            f"**Provider:** {st.session_state.history[-1]['provider'] if st.session_state.history else provider_option}  ·  "
-            f"**Model:** {st.session_state.history[-1]['model'] if st.session_state.history else model}  ·  "
-            f"**Type:** {st.session_state.history[-1]['type'] if st.session_state.history else analysis_type}"
+            f"**{t['provider']}:** {st.session_state.history[-1]['provider'] if st.session_state.history else provider_option}  ·  "
+            f"**{t['model']}:** {st.session_state.history[-1]['model'] if st.session_state.history else model}  ·  "
+            f"**{t['type']}:** {st.session_state.history[-1]['type'] if st.session_state.history else analysis_type}"
         )
     with col2:
         st.download_button(

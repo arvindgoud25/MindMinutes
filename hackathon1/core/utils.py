@@ -35,5 +35,5 @@ def init_session_state():
         st.session_state.current_result = None
     if "last_config" not in st.session_state:
         st.session_state.last_config = {}
-    if "dark_mode" not in st.session_state:
-        st.session_state.dark_mode = False
+    if "dark_mode_toggle" not in st.session_state:
+        st.session_state.dark_mode_toggle = False
