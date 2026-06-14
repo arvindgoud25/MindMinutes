@@ -38,7 +38,7 @@ with st.sidebar:
 
     provider_option = st.selectbox(
         t["ai_provider"],
-        ["Local (Ollama)", "Google Gemini", "OpenAI (BYOK)", "Anthropic (BYOK)"],
+        ["Google Gemini", "Local (Ollama)", "OpenAI (BYOK)", "Anthropic (BYOK)"],
     )
 
     provider_config = {}
@@ -68,7 +68,7 @@ with st.sidebar:
             )
         model = st.selectbox(
             "Model",
-            ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"],
+            ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"],
         )
 
     elif provider_option == "OpenAI (BYOK)":
