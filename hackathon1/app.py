@@ -15,6 +15,62 @@ st.set_page_config(
 
 init_session_state()
 
+if st.session_state.dark_mode:
+    st.markdown("""
+<style>
+    .stApp { background-color: #0e1117; color: #fafafa; }
+    .stApp header { background-color: #0e1117; }
+    .stSidebar, .stSidebar .st-emotion-cache-1wrcr25, section[data-testid="stSidebar"] {
+        background-color: #1b1f24;
+    }
+    .stTextArea textarea, .stSelectbox div[data-baseweb="select"] > div {
+        background-color: #262730 !important;
+        color: #fafafa !important;
+    }
+    .stTextArea textarea:focus {
+        border-color: #6C63FF !important;
+    }
+    .st-bq, .st-emotion-cache-1v0mbdj, .st-emotion-cache-1y4p8pa {
+        background-color: #1b1f24;
+    }
+    .stMarkdown, .stText, p, li, span, label, .stCaption {
+        color: #fafafa !important;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #1b1f24;
+    }
+    .stTabs [data-baseweb="tab"] {
+        color: #fafafa;
+    }
+    .stSelectbox label, .stSlider label, .stTextInput label {
+        color: #fafafa !important;
+    }
+    .st-b8 { border-color: #3c3c4a; }
+    .stAlert { background-color: #1b1f24 !important; }
+    .stSpinner > div > div { border-color: #6C63FF !important; }
+    .st-emotion-cache-1y4p8pa { background-color: #1b1f24; }
+    div[data-testid="stExpander"] { background-color: #1b1f24; border: 1px solid #3c3c4a; }
+    div.stDownloadButton button, div.stButton button { background-color: #6C63FF; color: white; }
+    div.stDownloadButton button:hover, div.stButton button:hover { background-color: #5a52e0; }
+    hr { border-color: #3c3c4a; }
+    .stFileUploader { background-color: #262730; border-color: #3c3c4a; }
+    .stFileUploader label { color: #fafafa !important; }
+    pre { background-color: #1b1f24 !important; }
+    code { color: #f0c674 !important; }
+    .st-bb { border-bottom-color: #3c3c4a; }
+    .st-bt { border-top-color: #3c3c4a; }
+    .st-bl { border-left-color: #3c3c4a; }
+    .st-br { border-right-color: #3c3c4a; }
+    .st-cb { color: #fafafa; }
+    .stMetric { background-color: #1b1f24; }
+    .st-bw { background-color: #262730; }
+    div[role="alert"] { background-color: #262730 !important; }
+</style>
+""", unsafe_allow_html=True)
+
 # ─── Sidebar ────────────────────────────────────────────────────────────────
 
 with st.sidebar:
@@ -32,6 +88,9 @@ with st.sidebar:
             st.session_state.last_language = language
 
     t = LANGUAGES[language]
+
+    dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.get("dark_mode", False))
+    st.session_state.dark_mode = dark_mode
 
     st.title(f"⚙️ {t['configuration']}")
     st.markdown("---")
