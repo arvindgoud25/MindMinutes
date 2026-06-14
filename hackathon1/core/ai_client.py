@@ -1,3 +1,4 @@
+import os
 import requests
 import streamlit as st
 from typing import Optional
@@ -27,6 +28,8 @@ class AIClient:
             return self._chat_openai(system_prompt, user_message)
         elif "Anthropic" in self.provider:
             return self._chat_anthropic(system_prompt, user_message)
+        elif "Gemini" in self.provider:
+            return self._chat_gemini(system_prompt, user_message)
         else:
             raise ValueError(f"Unknown provider: {self.provider}")
 
@@ -80,6 +83,24 @@ class AIClient:
             max_tokens=self.max_tokens,
         )
         return response.content[0].text
+
+
+    def _chat_gemini(self, system_prompt: str, user_message: str) -> str:
+        import google.generativeai as genai
+
+        api_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY", "")
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            self.model,
+            generation_config=genai.types.GenerationConfig(
+                temperature=self.temperature,
+                max_output_tokens=self.max_tokens,
+            ),
+        )
+        response = model.generate_content(
+            [system_prompt, user_message],
+        )
+        return response.text
 
 
 @st.cache_data(ttl=30)

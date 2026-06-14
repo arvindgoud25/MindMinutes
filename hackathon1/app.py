@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 
 from core.ai_client import AIClient, get_ollama_models
@@ -37,7 +38,7 @@ with st.sidebar:
 
     provider_option = st.selectbox(
         t["ai_provider"],
-        ["Local (Ollama)", "OpenAI (BYOK)", "Anthropic (BYOK)"],
+        ["Local (Ollama)", "Google Gemini", "OpenAI (BYOK)", "Anthropic (BYOK)"],
     )
 
     provider_config = {}
@@ -58,6 +59,17 @@ with st.sidebar:
         else:
             model = st.selectbox("Model", available_models)
         provider_config["api_base"] = api_base
+
+    elif provider_option == "Google Gemini":
+        if not (st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")):
+            st.warning(
+                "⚠️ GEMINI_API_KEY not found. Set it in "
+                "`.streamlit/secrets.toml` or as an environment variable."
+            )
+        model = st.selectbox(
+            "Model",
+            ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"],
+        )
 
     elif provider_option == "OpenAI (BYOK)":
         api_key = st.text_input(
@@ -164,7 +176,7 @@ analyze_clicked = st.button(
 if analyze_clicked:
     if not transcript.strip():
         st.error("Please provide a transcript to analyze.")
-    elif provider_option != "Local (Ollama)" and not provider_config.get("api_key"):
+    elif provider_option not in ("Local (Ollama)", "Google Gemini") and not provider_config.get("api_key"):
         st.error(f"Please enter your API key for {provider_option}.")
     else:
         client = AIClient(
@@ -176,7 +188,7 @@ if analyze_clicked:
         )
 
     if transcript.strip() and (
-        provider_option == "Local (Ollama)" or provider_config.get("api_key")
+        provider_option in ("Local (Ollama)", "Google Gemini") or provider_config.get("api_key")
     ):
         with st.spinner("🤖 Analyzing your transcript..."):
             try:
